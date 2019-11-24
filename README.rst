@@ -1,6 +1,20 @@
 WoK - the Work Kounter
 ======================
 
+|licence| |black| |flake8| |actions|
+
+.. |licence| image:: https://img.shields.io/badge/License-GPLv3-blue.svg
+    :target: https://www.gnu.org/licenses/gpl-3.0
+
+.. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
+    :target: https://github.com/psf/black
+
+.. |actions| image:: https://github.com/guigui64/wok/workflows/tests/badge.svg
+    :target: https://github.com/guigui64/wok/actions
+
+.. |flake8| image:: https://img.shields.io/badge/flake8-code%20check-yellowgreen
+    :target: https://pypi.org/project/flake8/
+
 **wok** is a command line work hours counter
 
 Features
@@ -61,4 +75,3 @@ Contributing
 
 Clone this repo and use ``pipenv install --dev`` to install all needed
 dependencies then start coding.
-
