@@ -59,6 +59,6 @@ Installing
 Contributing
 ------------
 
-Clone this repo and use `pipenv install --dev` to install all needed
+Clone this repo and use ``pipenv install --dev`` to install all needed
 dependencies then start coding.
 
