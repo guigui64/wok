@@ -1,0 +1,18 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+restview = "*"
+
+[packages]
+
+[requires]
+python_version = "3.6"
+
+[scripts]
+readme = "restview ./README.rst"
+test = "python -m unittest -v"
+autotest = "./scripts/autotest.sh"
+
