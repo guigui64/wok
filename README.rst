@@ -12,7 +12,7 @@ WoK - the Work Kounter
 .. |actions| image:: https://github.com/guigui64/wok/workflows/tests/badge.svg
     :target: https://github.com/guigui64/wok/actions
 
-.. |flake8| image:: https://img.shields.io/badge/flake8-code%20check-yellowgreen
+.. |flake8| image:: https://img.shields.io/badge/code%20check-flake8-yellowgreen
     :target: https://pypi.org/project/flake8/
 
 **wok** is a command line work hours counter
