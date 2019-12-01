@@ -65,6 +65,24 @@ Model
 |      |                                                      |                                                                            |
 +------+------------------------------------------------------+----------------------------------------------------------------------------+
 
+Files
+-----
+
+Files will be saved in a *.wok* file inside the ``$HOME`` folder.
+
+::
+
+  .wok/
+  |-- current_job # contains current job name
+  |-- job_one/
+  |   |-- task_one # containes task_one datetimes
+  |   |-- task_two
+  |   |-- ...
+  |-- job_two/
+  |   |-- task_one
+  |   |-- ...
+  |-- ...
+
 Installing
 ----------
 
