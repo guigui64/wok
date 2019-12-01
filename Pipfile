@@ -9,6 +9,7 @@ black = "*"
 flake8 = "*"
 pre-commit = "*"
 isort = "*"
+pyment = "*"
 
 [packages]
 
