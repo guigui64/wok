@@ -52,7 +52,7 @@ Model
 +------+------------------------------------------------------+----------------------------------------------------------------------------+
 | Term | Definition                                           | Example commands                                                           |
 +======+======================================================+============================================================================+
-| Job  | A job                                                | | ``wok job`` or ``wok job --list`` to list existing jobs                  |
+| Job  | A job. A job has a list of tasks.                    | | ``wok job`` or ``wok job --list`` to list existing jobs                  |
 |      |                                                      | | ``wok job my_job`` to add the *my_job* job                               |
 |      |                                                      | | ``wok job --delete my_job`` to remove this job                           |
 |      |                                                      | | ``wok switch my_job`` to switch to this job                              |
