@@ -26,6 +26,15 @@ class Task:
         print(f"{self} started at {self.current_datetime}")
         return True
 
+    def is_running(self):
+        """
+
+        :return: True if task is running
+        :rtype: boolean
+
+        """
+        return self.current_datetime is not None
+
     def end(self, dt=datetime.now()):
         """
 
@@ -34,7 +43,7 @@ class Task:
         :rtype: boolean
 
         """
-        if self.current_datetime is None:
+        if not self.is_running():
             print(f"{self} not yet started")
             return False
         print(f"{self} ended at {dt}")

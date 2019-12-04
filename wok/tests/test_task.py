@@ -11,23 +11,27 @@ class TestTask(unittest.TestCase):
     def test_init(self):
         self.assertEqual(self.task.name, "tested_task")
         self.assertEqual(self.task.datetimes, [])
+        self.assertFalse(self.task.is_running())
 
     def test_start(self):
         now = datetime.now()
         res = self.task.start(dt=now)
         self.assertTrue(res)
         self.assertEqual(self.task.current_datetime, now)
+        self.assertTrue(self.task.is_running())
 
     def test_start_twice(self):
         now = datetime.now()
         res = self.task.start(dt=now)
         self.assertTrue(res)
+        self.assertTrue(self.task.is_running())
         res = self.task.start(dt=now)
         self.assertFalse(res)
 
     def test_end(self):
         res = self.task.end()
         self.assertFalse(res)
+        self.assertFalse(self.task.is_running())
 
     def test_start_end_save(self):
         start = datetime(2019, 1, 10, 11, 11)
