@@ -1,6 +1,10 @@
+import pathlib
 import unittest
+from datetime import datetime
 
-from wok import wok
+from wok.job import Job
+from wok.task import Task
+from wok.wok import Wok
 
 
 class TestWok(unittest.TestCase):
@@ -19,6 +23,32 @@ class TestWok(unittest.TestCase):
     @unittest.expectedFailure
     def test_failed_test(self):
         self.assertEqual(1, "2")
+
+    def test_save_load(self):
+        task1 = Task("task1")
+        start = datetime(2019, 1, 10, 11, 11)
+        end = datetime(2019, 1, 10, 11, 22)
+        task1.start(dt=start)
+        task1.end(dt=end)
+        task2 = Task("task2")
+        task3 = Task("task3")
+        job1 = Job("job1")
+        job2 = Job("job2")
+        job1.add_task(task1)
+        job1.add_task(task2)
+        job2.add_task(task3)
+        wok1 = Wok()
+        wok1.jobs.append(job1)
+        wok1.jobs.append(job2)
+        wok1.current_job = 0
+        path = pathlib.Path.cwd() / ".wok_test"
+        wok1.save(dir=path)
+        wok2 = Wok()
+        wok2.load(dir=path)
+        self.assertEqual(wok2.jobs[wok2.current_job].name, "job1")
+        self.assertEqual(len(wok2.jobs), 2)
+        out = (path / "job1" / "task1").read_text()
+        self.assertEqual(out, "2019-01-10T11:11:00.000000->2019-01-10T11:22:00.000000")
 
     def tearDown(self):
         # print("tearing down test")

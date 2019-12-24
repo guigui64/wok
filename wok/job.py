@@ -67,19 +67,6 @@ class Job:
         """
         return self.remove_task(self.get_task(taskname))
 
-    def load(self, input):
-        """Loads the job from the content of its file
-
-        :param input: The content of its file
-        :type input: [string]
-        :return: True for success
-        :rtype: boolean
-
-        """
-        pass  # TODO load
-
-    # TODO save
-
     def __str__(self):
         s = f"Job '{self.name}'\n"
         for task in self.tasks:
