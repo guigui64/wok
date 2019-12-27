@@ -45,7 +45,7 @@ class TestWok(unittest.TestCase):
         wok1.save(dir=path)
         wok2 = Wok()
         wok2.load(dir=path)
-        self.assertEqual(wok2.jobs[wok2.current_job].name, "job1")
+        self.assertEqual(wok2.jobs[wok2.current_job_idx].name, "job1")
         self.assertEqual(len(wok2.jobs), 2)
         out = (path / "job1" / "task1").read_text()
         self.assertEqual(out, "2019-01-10T11:11:00.000000->2019-01-10T11:22:00.000000")

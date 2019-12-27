@@ -34,9 +34,7 @@ Usage
 +---------+-----------------------------------------------+
 | switch  | Switch to a job                               |
 +---------+-----------------------------------------------+
-| pause   | Pause the current task                        |
-+---------+-----------------------------------------------+
-| resume  | Resume the current task                       |
+| suspend | Suspend the running tasks if any              |
 +---------+-----------------------------------------------+
 | job     | Handle jobs (list, add, delete)               |
 +---------+-----------------------------------------------+
@@ -60,7 +58,7 @@ Model
 | Task | A task from a job (a task cannot be shared between   | | ``wok task`` or ``wok task --list`` to list all tasks of the current job |
 |      | jobs, create a *generic* job if you have such tasks) | | ``wok task my_task`` to add the *my_task* task                           |
 |      |                                                      | | ``wok task my_task start`` to register you started working on this task  |
-|      |                                                      | | ``wok pause`` will pause any started task                                |
+|      |                                                      | | ``wok suspend`` will suspend any started task                            |
 +------+------------------------------------------------------+----------------------------------------------------------------------------+
 |      |                                                      |                                                                            |
 +------+------------------------------------------------------+----------------------------------------------------------------------------+

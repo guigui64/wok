@@ -11,7 +11,7 @@ class Job:
         :param task: The task to add
         :type task: Task
         :return: True for success
-        :rype: boolean
+        :rtype: boolean
 
         """
         if self.__get_task(task.name):
@@ -55,6 +55,15 @@ class Job:
         if not task:
             print(f"No task with name '{taskname}' found in job {self.name}")
         return task
+
+    def get_running_tasks(self):
+        """
+
+        :return: the running tasks
+        :rtype: [Task]
+
+        """
+        return [t for t in self.tasks if t.is_running()]
 
     def remove_task_name(self, taskname):
         """
