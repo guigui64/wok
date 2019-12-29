@@ -20,7 +20,8 @@ class WokCli:
     def __run(self):
         parser = argparse.ArgumentParser(
             epilog="""TODO list available commands
-See 'wok <command> --help' for more help on each command"""
+See 'wok <command> --help' for more help on each command""",
+            formatter_class=argparse.RawDescriptionHelpFormatter,
         )
         parser.add_argument(
             "command",
@@ -33,11 +34,12 @@ See 'wok <command> --help' for more help on each command"""
         getattr(self, args.command)()
 
     def status(self):
-        job, task = self.wok.status()
+        job, tasks = self.wok.status()
         print("Current job:")
         print("\t" + job)
-        print("\nCurrent task:")
-        print("\t" + task)
+        print("\nRunning task(s):")
+        for task in tasks:
+            print("\t" + task)
 
     def switch(self):
         parser = argparse.ArgumentParser(
@@ -58,7 +60,63 @@ See 'wok <command> --help' for more help on each command"""
             print("No task to suspend")
 
     def job(self):
-        print("TODO job")
+        description = "Handle jobs\n\n"
+        description += "Examples:\n"
+        description += f"\t- '{sys.argv[0]} job my_job' : display info about 'my_job'\n"
+        description += f"\t- '{sys.argv[0]} job --create my_other_job'\n"
+        description += f"\t- '{sys.argv[0]} job --rename my_other_job my_newer_job'"
+        parser = argparse.ArgumentParser(
+            prog=sys.argv[0] + " job",
+            description=description,
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+        )
+        group = parser.add_mutually_exclusive_group()
+        group.add_argument(
+            "-c", "--create", action="store_true", help="Create a job",
+        )
+        group.add_argument(
+            "-d",
+            "--delete",
+            action="store_true",
+            help="Delete the specified job and all its tasks",
+        )
+        group.add_argument(
+            "-r", "--rename", action="store_true", help="Rename the specified job"
+        )
+        group.add_argument(
+            "-l", "--list", action="store_true", help="List all existing jobs"
+        )
+        parser.add_argument("job", nargs="*")
+        args = parser.parse_args(sys.argv[2:])
+        if args.list:
+            jobs, current = self.wok.get_jobs()
+            for i, j in enumerate(jobs):
+                if i == current:
+                    print(j.name + " [current]")
+                else:
+                    print(j.name)
+        elif args.create:
+            for job in args.job:
+                res, msg = self.wok.add_job(job)
+                if res:
+                    print(f"Job '{job}' created")
+                else:
+                    print(msg)
+        elif args.delete:
+            if self.wok.delete_job(args.job[0]):
+                print(f"Job '{args.job[0]}' deleted!")
+            else:
+                print(f"No job '{args.job[0]}' found to delete")
+        elif args.rename:
+            job = self.wok.get_job(args.job[0])
+            if job is None:
+                print(f"Could not rename job '{args.job[0]}'")
+            else:
+                job.name = args.job[1]
+                print(f"Job '{args.job[0]}' renamed '{args.job[1]}' successfully")
+        else:
+            for job in args.job:
+                print(self.wok.get_job(job))
 
     def task(self):
         print("TODO task")

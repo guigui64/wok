@@ -1,4 +1,5 @@
 import pathlib
+import shutil
 
 from wok.job import Job
 from wok.task import Task
@@ -29,6 +30,35 @@ class Wok:
     def __get_current_job(self):
         return None if self.current_job_idx == -1 else self.jobs[self.current_job_idx]
 
+    def add_job(self, name, current=False):
+        if any([job.name == name for job in self.jobs]):
+            return False, f"Job with name '{name}' already exists"
+        job = Job(name)
+        self.jobs.append(job)
+        if current:
+            self.current_job_idx = len(self.jobs) - 1
+        return True, ""
+
+    def get_job(self, name):
+        return next(filter(lambda job: job.name == name, self.jobs), None)
+
+    def get_jobs(self):
+        return self.jobs, self.current_job_idx
+
+    def delete_job(self, name):
+        current = self.__get_current_job()
+        job = self.get_job(name)
+        if job is None:
+            return False
+        self.jobs.remove(job)
+        if current.name == name:
+            self.current_job_idx = -1
+        else:
+            _, self.current_job_idx = next(
+                ((j, i) for i, j in enumerate(self.jobs) if j.name == current.name)
+            )
+        return True
+
     def status(self):
         """Get the status
 
@@ -46,6 +76,8 @@ class Wok:
             else:
                 for task in tasks:
                     t.append(task.__str__())
+        else:
+            t.append("No running task")
         return j, t
 
     def suspend(self):
@@ -71,17 +103,17 @@ class Wok:
         :rtype: boolean
 
         """
+        self.suspend()  # suspend all running tasks before switching
         try:
-            job, self.current_job_idx = next(
+            _, self.current_job_idx = next(
                 ((j, i) for i, j in enumerate(self.jobs) if j.name == job_name)
             )
             return True
 
         except StopIteration:
             if create:
-                job = Job(job_name)
-                self.jobs.append(job)
-                return self.switch(job_name)
+                self.add_job(job_name, current=True)
+                return True
             else:
                 return False
 
@@ -102,7 +134,7 @@ class Wok:
             ][0]
             current_job_name = current_job_file.read_text().strip()
         except IndexError:
-            print("No current job file found")
+            pass
         for job_file in [x for x in dir.iterdir() if x.is_dir()]:
             job = Job(job_file.name)
             for task_file in job_file.iterdir():
@@ -119,6 +151,7 @@ class Wok:
         :param dir: Default value = default_dir)
 
         """
+        shutil.rmtree(dir)
         if not self.__check_dir(dir):
             print("Could not save (see previous error)")
             return False

@@ -79,5 +79,8 @@ class Job:
     def __str__(self):
         s = f"Job '{self.name}'\n"
         for task in self.tasks:
-            s += f"\t{task}\n"
+            if task.is_running():
+                s += f"\t{task} [running]\n"
+            else:
+                s += f"\t{task}\n"
         return s[:-1]  # Remove last \n
