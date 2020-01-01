@@ -6,4 +6,9 @@ __pycache__/
 # Vim files
 *.swp
 Session.vim
+tags
 
+# Wok specific
+
+# Test files
+.wok_test/

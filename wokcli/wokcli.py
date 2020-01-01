@@ -1,27 +1,23 @@
-import argparse
 import sys
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
-from wok import wok
+from wok.api import WokApi
 
 
 class WokCli:
     def __init__(self):
-        self.__loadWok()
-        self.__run()
-        self.__saveWok()
+        self.api = WokApi()
+        self.api.load()
+        self.save = False
+        self.run()
+        if self.save:
+            self.api.save()
 
-    def __loadWok(self):
-        self.wok = wok.Wok()
-        self.wok.load()
-
-    def __saveWok(self):
-        self.wok.save()
-
-    def __run(self):
-        parser = argparse.ArgumentParser(
+    def run(self):
+        parser = ArgumentParser(
             epilog="""TODO list available commands
 See 'wok <command> --help' for more help on each command""",
-            formatter_class=argparse.RawDescriptionHelpFormatter,
+            formatter_class=RawDescriptionHelpFormatter,
         )
         parser.add_argument(
             "command",
@@ -34,30 +30,29 @@ See 'wok <command> --help' for more help on each command""",
         getattr(self, args.command)()
 
     def status(self):
-        job, tasks = self.wok.status()
-        print("Current job:")
-        print("\t" + job)
-        print("\nRunning task(s):")
-        for task in tasks:
-            print("\t" + task)
+        res, out = self.api.status()
+        if res:
+            print(out)
 
     def switch(self):
-        parser = argparse.ArgumentParser(
+        parser = ArgumentParser(
             prog=sys.argv[0] + " switch", description="Switch to a job"
         )
         parser.add_argument("job", help="the job to switch to")
         parser.add_argument("-c", "--create", action="store_true")
         args = parser.parse_args(sys.argv[2:])
-        if self.wok.switch(args.job, create=args.create):
-            print(f"Switched to job {args.job}")
-        else:
-            print(f"Impossible to switch to job {args.job}, try using the '-c' option")
+        self.save, out = self.api.switch(args.job, create=args.create)
+        print(out)
 
     def suspend(self):
-        if self.wok.suspend():
-            print("Task(s) suspended")
-        else:
-            print("No task to suspend")
+        self.save, out = self.api.suspend()
+        print(out)
+
+    def __check_args_nb(self, li, fun):
+        if not fun(len(li)):
+            print("Incorrect number of arguments")
+            return False
+        return True
 
     def job(self):
         description = "Handle jobs\n\n"
@@ -65,10 +60,10 @@ See 'wok <command> --help' for more help on each command""",
         description += f"\t- '{sys.argv[0]} job my_job' : display info about 'my_job'\n"
         description += f"\t- '{sys.argv[0]} job --create my_other_job'\n"
         description += f"\t- '{sys.argv[0]} job --rename my_other_job my_newer_job'"
-        parser = argparse.ArgumentParser(
+        parser = ArgumentParser(
             prog=sys.argv[0] + " job",
             description=description,
-            formatter_class=argparse.RawDescriptionHelpFormatter,
+            formatter_class=RawDescriptionHelpFormatter,
         )
         group = parser.add_mutually_exclusive_group()
         group.add_argument(
@@ -88,38 +83,113 @@ See 'wok <command> --help' for more help on each command""",
         )
         parser.add_argument("job", nargs="*")
         args = parser.parse_args(sys.argv[2:])
-        if args.list:
-            jobs, current = self.wok.get_jobs()
-            for i, j in enumerate(jobs):
-                if i == current:
-                    print(j.name + " [current]")
-                else:
-                    print(j.name)
-        elif args.create:
+        if args.create:
+            if not self.__check_args_nb(args.job, lambda x: x > 0):
+                return
             for job in args.job:
-                res, msg = self.wok.add_job(job)
+                res, msg = self.api.add_job(job)
                 if res:
-                    print(f"Job '{job}' created")
-                else:
-                    print(msg)
+                    # One job res might be False but save must stay True
+                    self.save = True
+                print(msg)
         elif args.delete:
-            if self.wok.delete_job(args.job[0]):
-                print(f"Job '{args.job[0]}' deleted!")
-            else:
-                print(f"No job '{args.job[0]}' found to delete")
+            if not self.__check_args_nb(args.job, lambda x: x == 1):
+                return
+            self.save, out = self.api.delete_job(args.job[0])
+            print(out)
         elif args.rename:
-            job = self.wok.get_job(args.job[0])
-            if job is None:
-                print(f"Could not rename job '{args.job[0]}'")
-            else:
-                job.name = args.job[1]
-                print(f"Job '{args.job[0]}' renamed '{args.job[1]}' successfully")
+            if not self.__check_args_nb(args.job, lambda x: x == 2):
+                return
+            self.save, out = self.api.rename_job(*args.job[:2])
+            print(out)
+        elif len(args.job) == 0 or args.list:
+            _, out = self.api.list_jobs()
+            print(out)
         else:
             for job in args.job:
-                print(self.wok.get_job(job))
+                _, out = self.api.get_job_details(job)
+                print(out)
 
     def task(self):
-        print("TODO task")
+        description = "Handle tasks\n\n"
+        description += "Examples:\n"
+        description += (
+            f"\t- '{sys.argv[0]} task my_task' : display info about 'my_task'\n"
+        )
+        description += f"\t- '{sys.argv[0]} task --create my_other_task'\n"
+        description += f"\t- '{sys.argv[0]} task --rename my_other_task my_newer_task'"
+        parser = ArgumentParser(
+            prog=sys.argv[0] + " task",
+            description=description,
+            formatter_class=RawDescriptionHelpFormatter,
+        )
+        group = parser.add_mutually_exclusive_group()
+        startstop = group.add_mutually_exclusive_group()
+        crud = group.add_mutually_exclusive_group()
+        crud.add_argument(
+            "-c",
+            "--create",
+            action="store_true",
+            help="Create a task in the current job",
+        )
+        crud.add_argument(
+            "-d", "--delete", action="store_true", help="Delete the specified task",
+        )
+        crud.add_argument(
+            "-r", "--rename", action="store_true", help="Rename the specified task"
+        )
+        crud.add_argument(
+            "-l",
+            "--list",
+            action="store_true",
+            help="List all existing tasks in the current job",
+        )
+        startstop.add_argument(
+            "-s",
+            "--start",
+            action="store_true",
+            help="Start the task and create the task if it does not exist",
+        )
+        startstop.add_argument("-e", "--end", action="store_true", help="Stop the task")
+        parser.add_argument("task", nargs="*")
+        args = parser.parse_args(sys.argv[2:])
+        if args.create:
+            if not self.__check_args_nb(args.task, lambda x: x > 0):
+                return
+            for task in args.task:
+                res, msg = self.api.add_task(task)
+                if res:
+                    # One task res might be False but save must stay True
+                    self.save = True
+                print(msg)
+        elif args.delete:
+            if not self.__check_args_nb(args.task, lambda x: x == 1):
+                return
+            self.save, out = self.api.delete_task(args.task[0])
+            print(out)
+        elif args.rename:
+            if not self.__check_args_nb(args.task, lambda x: x == 2):
+                return
+            self.save, out = self.api.rename_task(*args.task[:2])
+            print(out)
+        elif args.start:
+            if not self.__check_args_nb(args.task, lambda x: x == 1):
+                return
+            self.save, out = self.api.start_task(args.task[0])
+            print(out)
+        elif args.end:
+            if not self.__check_args_nb(args.task, lambda x: x == 1):
+                return
+            self.save, out = self.api.end_task(args.task[0])
+            print(out)
+        elif len(args.task) == 0 or args.list:
+            _, out = self.api.list_current_job_tasks()
+            print(out)
+
+        else:
+            for task in args.task:
+                _, out = self.api.get_task_details(task)
+                print(out)
 
     def stat(self):
         print("TODO stat")

@@ -1,6 +1,6 @@
-import pathlib
 import unittest
 from datetime import datetime
+from pathlib import Path
 
 from wok.job import Job
 from wok.task import Task
@@ -12,17 +12,17 @@ class TestWok(unittest.TestCase):
         # print("setting up test")
         pass
 
-    def test_run(self):
-        # wok.run()
-        self.assertTrue(True)
+    # def test_run(self):
+    #     # wok.run()
+    #     self.assertTrue(True)
 
-    @unittest.skip
-    def test_skipped_test(self):
-        self.assertTrue(False)
+    # @unittest.skip
+    # def test_skipped_test(self):
+    #     self.assertTrue(False)
 
-    @unittest.expectedFailure
-    def test_failed_test(self):
-        self.assertEqual(1, "2")
+    # @unittest.expectedFailure
+    # def test_failed_test(self):
+    #     self.assertEqual(1, "2")
 
     def test_save_load(self):
         task1 = Task("task1")
@@ -33,14 +33,15 @@ class TestWok(unittest.TestCase):
         task2 = Task("task2")
         task3 = Task("task3")
         wok1 = Wok()
-        wok1.add_job("job1", current=True)
-        job1 = wok1.get_job("job1")
-        wok1.add_job("job2")
+        job1 = Job("job1")
+        wok1.jobs.append(job1)
+        wok1.current_job_idx = 0
         job2 = Job("job2")
+        wok1.jobs.append(job2)
         job1.add_task(task1)
         job1.add_task(task2)
         job2.add_task(task3)
-        path = pathlib.Path.cwd() / ".wok_test"
+        path = Path.cwd() / ".wok_test"
         wok1.save(dir=path)
         wok2 = Wok()
         wok2.load(dir=path)

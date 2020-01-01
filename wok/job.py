@@ -1,48 +1,48 @@
+from typing import List, Optional, Tuple
+
+from wok.task import Task
+
+
 class Job:
     """A Job has a name and a list of tasks."""
 
-    def __init__(self, name):
-        self.name = name
-        self.tasks = []
+    def __init__(self, name: str):
+        self.name: str = name
+        self.tasks: List[Task] = []
 
-    def add_task(self, task):
+    def add_task(self, task: Task) -> Tuple[bool, str]:
         """Adds the task if the name is not taken
 
         :param task: The task to add
         :type task: Task
-        :return: True for success
-        :rtype: boolean
+        :return: True for success + message
+        :rtype: boolean, string
 
         """
-        if self.__get_task(task.name):
-            print(f"A task with name '{task.name}' already exists in job {self.name}")
-            return False
+        if self.get_task(task.name):
+            return (
+                False,
+                f"A task with name '{task.name}' already exists in job '{self.name}'",
+            )
         self.tasks.append(task)
-        return True
+        return True, f"Task '{task.name}' added to job '{self.name}'"
 
-    def remove_task(self, task):
+    def remove_task(self, task: Task) -> Tuple[bool, str]:
         """
 
         :param task: The task to remove
         :type task: Task
-        :return: True for success
-        :rtype: boolean
+        :return: True for success + message
+        :rtype: boolean, string
 
         """
         try:
             self.tasks.remove(task)
-            return True
+            return True, f"Task '{task.name}' removed from job '{self.name}'"
         except ValueError:
-            return False
+            return False, "No task to remove"
 
-    def __get_task(self, taskname):
-        """Inner get_task with no log"""
-        try:
-            return next(filter(lambda t: t.name == taskname, self.tasks))
-        except StopIteration:
-            return None
-
-    def get_task(self, taskname):
+    def get_task(self, taskname: str) -> Optional[Task]:
         """
 
         :param taskname: The name of the task to get
@@ -51,12 +51,12 @@ class Job:
         :rtype: Task
 
         """
-        task = self.__get_task(taskname)
-        if not task:
-            print(f"No task with name '{taskname}' found in job {self.name}")
-        return task
+        try:
+            return next(filter(lambda t: t.name == taskname, self.tasks))
+        except StopIteration:
+            return None
 
-    def get_running_tasks(self):
+    def get_running_tasks(self) -> List[Task]:
         """
 
         :return: the running tasks
@@ -65,13 +65,13 @@ class Job:
         """
         return [t for t in self.tasks if t.is_running()]
 
-    def remove_task_name(self, taskname):
+    def remove_task_name(self, taskname: str) -> Tuple[bool, str]:
         """
 
         :param taskname: The name of the task to remove
         :type taskname: string
-        :return: True for success
-        :rtype: boolean
+        :return: True for success + message
+        :rtype: boolean, string
 
         """
         return self.remove_task(self.get_task(taskname))
