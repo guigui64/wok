@@ -148,9 +148,10 @@ class WokApi:
             return False, "No current job"
         task = self.__get_task(name)
         if task is None:
-            added, msg = self.add_task(name, True)
+            added, msg = self.add_task(name)
             if not added:
                 return False, msg
+            task = self.__get_task(name)
         return task.start()
 
     def end_task(self, name: str) -> Tuple[bool, str]:
@@ -191,12 +192,13 @@ class WokApi:
         :rtype: boolean, string
 
         """
-        r = False, "No task to suspend"
+        r = []
         for job in self.wok.jobs:
             for task in job.get_running_tasks():
-                task.end()
-                r = True, "Task(s) suspended"
-        return r
+                r.append(task.end())
+        if len(r) == 0:
+            return False, "No task to suspended"
+        return any([b for b, _ in r]), "\n".join([m for _, m in r])
 
     def switch(self, job_name: str, create: bool = False) -> Tuple[bool, str]:
         """Switch to the job with the given name

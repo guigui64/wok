@@ -51,10 +51,15 @@ class Task:
         duration = dt - self.current_datetime
         self.datetimes.append((self.current_datetime, dt))
         self.current_datetime = None
+        sduration = str(duration)
+        try:
+            sduration = sduration[: sduration.rindex(".")]  # remove milliseconds
+        except ValueError:
+            pass  # not found
         return (
             True,
             f"{self} ended at {dt.strftime(Task.niceformat)}\n\tDuration={duration}",
-        )  # TODO format duration (type=timedelta) (use divmod)
+        )
 
     def load(self, input: List[str]) -> None:
         """Loads a task from the content of its file.
@@ -99,13 +104,19 @@ class Task:
     def __str__(self):
         return f"Task '{self.name}'"
 
-    def get_total_duration(self, now: datetime = datetime.now()) -> timedelta:
-        return sum(
+    def get_total_duration(self, now: datetime = datetime.now()) -> str:
+        duration = sum(
             [dt[1] - dt[0] for dt in self.datetimes],
             timedelta(0)
             if self.current_datetime is None
             else now - self.current_datetime,
         )
+        sduration = str(duration)
+        try:
+            sduration = sduration[: sduration.rindex(".")]  # remove milliseconds
+        except ValueError:
+            pass  # not found
+        return sduration
 
     def detailed_str(self):
         now = datetime.now()
