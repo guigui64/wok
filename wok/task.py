@@ -76,7 +76,9 @@ class Task:
 
         """
         if self.current_datetime:
-            print(f"ERR: {self} current datetime will be lost: {self.current_datetime}")
+            print(
+                f"ERROR: {self} current datetime will be lost: {self.current_datetime}"
+            )
             self.current_datetime = None
         self.datetimes.clear()
         for line in input:
