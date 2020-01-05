@@ -233,3 +233,6 @@ class WokApi:
                 return ok
             else:
                 return ko
+
+    def get_details(self) -> ApiRtype:
+        return True, self.wok.detailed_table()

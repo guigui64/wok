@@ -128,14 +128,13 @@ class Task:
                 out += " [running]"
             out += "\n"
             out += self.datetimes[0][0].strftime(Task.niceformat)
-            # TODO format duration
             out += " -[" + duration_to_str(self.get_total_duration(now)) + "]-> "
             out += (
                 self.datetimes[-1][1] if self.current_datetime is None else now
             ).strftime(Task.niceformat)
         return out
 
-    def detailed_table(self):
+    def detailed_table(self, suffix: List[str] = []):
         now = datetime.now()
         time_data = [
             [fro_m.strftime(Task.niceformat), to.strftime(Task.niceformat)]
@@ -154,7 +153,8 @@ class Task:
                 ["running", "yes" if self.current_datetime is not None else "no"],
                 ["time", time_table],
                 ["duration", duration_to_str(self.get_total_duration(now))],
-            ],
-            ["Task", self.name],
+            ]
+            + suffix,
+            ["task", self.name],
             tablefmt="fancy_grid",
         )

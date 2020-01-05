@@ -40,8 +40,7 @@ Usage
 +---------+-----------------------------------------------+
 | task    | Handle tasks (list, add, delete, start, stop) |
 +---------+-----------------------------------------------+
-| stat    | | Display statistics                          |
-|         | | ``wok [options] stat <job> [<task>]``       |
+| details | Display details of all jobs and tasks         |
 +---------+-----------------------------------------------+
 
 Model

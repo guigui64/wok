@@ -2,6 +2,7 @@ import shutil
 from pathlib import Path
 from typing import List, Tuple
 
+from tabulate import tabulate
 from wok.job import Job
 from wok.task import Task
 
@@ -81,3 +82,40 @@ class Wok:
             for task in job.tasks:
                 (job_dir / task.name).write_text(task.save())
         return True, "Loaded successfully"
+
+    def detailed_table(self) -> str:
+        out = tabulate([["Wok details"]], tablefmt="fancy_grid")
+        out += "\n"
+        if self.current_job_idx != -1:
+            out += self.jobs[self.current_job_idx].detailed_table(
+                title="current job",
+                suffix=[
+                    [
+                        "detailed tasks",
+                        "\n".join(
+                            [
+                                task.detailed_table()
+                                for task in self.jobs[self.current_job_idx].tasks
+                            ]
+                        ),
+                    ]
+                ],
+            )
+            out += "\n"
+        for i, job in enumerate(self.jobs):
+            if i != self.current_job_idx:
+                out += job.detailed_table(
+                    suffix=[
+                        [
+                            "detailed tasks",
+                            "\n".join(
+                                [
+                                    task.detailed_table()
+                                    for task in self.jobs[self.current_job_idx].tasks
+                                ]
+                            ),
+                        ]
+                    ],
+                )
+                out += "\n"
+        return out

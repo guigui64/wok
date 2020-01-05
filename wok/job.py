@@ -87,7 +87,7 @@ class Job:
                 s += f"\t{task}\n"
         return s[:-1]  # Remove last \n
 
-    def detailed_table(self) -> str:
+    def detailed_table(self, title: str = "Job", suffix: List[str] = []) -> str:
         tasks = [(t, t.get_total_duration()) for t in self.tasks]
         total = sum([d for (t, d) in tasks], timedelta(0))
         tasks_data = [
@@ -103,7 +103,8 @@ class Job:
             tasks_data, ["name", "running", "duration", "ratio"], tablefmt="fancy_grid"
         )
         return tabulate(
-            [["tasks", tasks_table], ["total duration", duration_to_str(total)]],
-            ["Job", self.name],
+            [["tasks", tasks_table], ["total duration", duration_to_str(total)]]
+            + suffix,
+            [title, self.name],
             tablefmt="fancy_grid",
         )

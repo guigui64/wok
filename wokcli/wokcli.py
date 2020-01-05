@@ -21,12 +21,13 @@ class WokCli:
 * suspend : suspend all running tasks if any
 * job     : handle jobs (list, create, delete, ...)
 * task    : handle tasks (list, create, delete, start, stop, ...)
+* details : display detailed tables of all jobs and tasks
 See 'wok <command> --help' for more help on each command""",
             formatter_class=RawDescriptionHelpFormatter,
         )
         parser.add_argument(
             "command",
-            choices=["status", "switch", "suspend", "job", "task"],
+            choices=["status", "switch", "suspend", "job", "task", "details"],
             nargs="?",
             default="status",
         )
@@ -207,6 +208,10 @@ See 'wok <command> --help' for more help on each command""",
             for task in args.task:
                 _, out = self.api.get_task_details(task, table=args.table)
                 print(out)
+
+    def details(self):
+        _, out = self.api.get_details()
+        print(out)
 
 
 if __name__ == "__main__":
