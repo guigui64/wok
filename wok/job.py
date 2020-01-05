@@ -1,6 +1,8 @@
+from datetime import timedelta
 from typing import List, Optional, Tuple
 
-from wok.task import Task
+from tabulate import tabulate
+from wok.task import Task, duration_to_str
 
 
 class Job:
@@ -84,3 +86,24 @@ class Job:
             else:
                 s += f"\t{task}\n"
         return s[:-1]  # Remove last \n
+
+    def detailed_table(self) -> str:
+        tasks = [(t, t.get_total_duration()) for t in self.tasks]
+        total = sum([d for (t, d) in tasks], timedelta(0))
+        tasks_data = [
+            [
+                t.name,
+                "yes" if t.is_running() else "no",
+                duration_to_str(d),
+                f"{d / total:.2%}",
+            ]
+            for (t, d) in tasks
+        ]
+        tasks_table = tabulate(
+            tasks_data, ["name", "running", "duration", "ratio"], tablefmt="fancy_grid"
+        )
+        return tabulate(
+            [["tasks", tasks_table], ["total duration", duration_to_str(total)]],
+            ["Job", self.name],
+            tablefmt="fancy_grid",
+        )

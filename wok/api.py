@@ -5,16 +5,18 @@ from wok.job import Job
 from wok.task import Task
 from wok.wok import Wok
 
+ApiRtype = Tuple[bool, str]
+
 
 class WokApi:
     def __init__(self, dir: Path = Wok.default_dir):
         self.wok: Wok = Wok()
         self.dir = dir
 
-    def load(self) -> Tuple[bool, str]:
+    def load(self) -> ApiRtype:
         return self.wok.load(self.dir)
 
-    def save(self) -> Tuple[bool, str]:
+    def save(self) -> ApiRtype:
         self.wok.save(self.dir)
 
     def get_current_job(self) -> Optional[Job]:
@@ -24,7 +26,7 @@ class WokApi:
             else self.wok.jobs[self.wok.current_job_idx]
         )
 
-    def add_job(self, name: str, current: bool = False) -> Tuple[bool, str]:
+    def add_job(self, name: str, current: bool = False) -> ApiRtype:
         if any([job.name == name for job in self.wok.jobs]):
             return False, f"Job with name '{name}' already exists"
         job = Job(name)
@@ -33,7 +35,7 @@ class WokApi:
             self.wok.current_job_idx = len(self.wok.jobs) - 1
         return True, f"Job '{name}' created"
 
-    def add_task(self, name: str) -> Tuple[bool, str]:
+    def add_task(self, name: str) -> ApiRtype:
         job = self.get_current_job()
         if job is None:
             return False, "No current job to add a task to"
@@ -43,7 +45,7 @@ class WokApi:
         job.add_task(task)
         return True, f"Task '{name}' created"
 
-    def list_jobs(self) -> Tuple[bool, str]:
+    def list_jobs(self) -> ApiRtype:
         out = ""
         for i, j in enumerate(self.wok.jobs):
             if i == self.wok.current_job_idx:
@@ -54,7 +56,7 @@ class WokApi:
             return False, "No job"
         return True, out[:-1]  # remove last \n
 
-    def list_current_job_tasks(self) -> Tuple[bool, str]:
+    def list_current_job_tasks(self) -> ApiRtype:
         job = self.get_current_job()
         out = ""
         if job is not None:
@@ -76,7 +78,7 @@ class WokApi:
             return None
         return next(filter(lambda task: task.name == name, job.tasks), None)
 
-    def delete_job(self, name: str) -> Tuple[bool, str]:
+    def delete_job(self, name: str) -> ApiRtype:
         current = self.get_current_job()
         job = self.__get_job(name)
         if job is None:
@@ -90,7 +92,7 @@ class WokApi:
             )
         return True, f"Job '{name}' deleted!"
 
-    def deleted_task(self, name: str) -> Tuple[bool, str]:
+    def deleted_task(self, name: str) -> ApiRtype:
         job = self.get_current_job()
         task = self.__get_task(name)
         if task is None:
@@ -100,7 +102,7 @@ class WokApi:
         job.tasks.remove(task)
         return True, f"Task '{name}' deleted from current job '{job.name}'"
 
-    def rename_job(self, old_name: str, new_name: str) -> Tuple[bool, str]:
+    def rename_job(self, old_name: str, new_name: str) -> ApiRtype:
         job = self.__get_job(old_name)
         if job is None:
             return False, f"Could not find job '{old_name}'"
@@ -112,7 +114,7 @@ class WokApi:
         job.name = new_name
         return True, f"Job '{old_name}' renamed '{new_name}' successfully"
 
-    def rename_task(self, old_name: str, new_name: str) -> Tuple[bool, str]:
+    def rename_task(self, old_name: str, new_name: str) -> ApiRtype:
         job = self.get_current_job()
         if job is None:
             return False, "No current job"
@@ -127,22 +129,26 @@ class WokApi:
         task.name = new_name
         return True, f"Task '{old_name}' renamed '{new_name}' successfully"
 
-    def get_job_details(self, name: str) -> Tuple[bool, str]:
+    def get_job_details(self, name: str, table: bool = False) -> ApiRtype:
         job = self.__get_job(name)
         if job is None:
             return False, f"No job '{name}' found"
+        if table:
+            return True, job.detailed_table()
         return True, str(job)
 
-    def get_task_details(self, name: str) -> Tuple[bool, str]:
+    def get_task_details(self, name: str, table: bool = False) -> ApiRtype:
         job = self.get_current_job()
         task = self.__get_task(name)
         if task is None:
             if job is None:
                 return False, "No current job"
             return False, f"No task '{name}' found in current job '{job.name}'"
+        if table:
+            return True, task.detailed_table()
         return True, task.detailed_str()
 
-    def start_task(self, name: str) -> Tuple[bool, str]:
+    def start_task(self, name: str) -> ApiRtype:
         job = self.get_current_job()
         if job is None:
             return False, "No current job"
@@ -154,7 +160,7 @@ class WokApi:
             task = self.__get_task(name)
         return task.start()
 
-    def end_task(self, name: str) -> Tuple[bool, str]:
+    def end_task(self, name: str) -> ApiRtype:
         job = self.get_current_job()
         if job is None:
             return False, "No current job"
@@ -163,7 +169,7 @@ class WokApi:
             return False, f"No task '{name}' found in current job '{job.name}'"
         return task.end()
 
-    def status(self) -> Tuple[bool, str]:
+    def status(self) -> ApiRtype:
         """Get the status
 
         """
@@ -185,7 +191,7 @@ class WokApi:
         out += "\n".join(["\t" + tt for tt in t])
         return True, out
 
-    def suspend(self) -> Tuple[bool, str]:
+    def suspend(self) -> ApiRtype:
         """Suspend the all running tasks if any
 
         :return: False if no task to suspend + message
@@ -200,7 +206,7 @@ class WokApi:
             return False, "No task to suspended"
         return any([b for b, _ in r]), "\n".join([m for _, m in r])
 
-    def switch(self, job_name: str, create: bool = False) -> Tuple[bool, str]:
+    def switch(self, job_name: str, create: bool = False) -> ApiRtype:
         """Switch to the job with the given name
 
         :param job_name: The name of the job to switch to

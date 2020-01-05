@@ -15,13 +15,18 @@ class WokCli:
 
     def run(self):
         parser = ArgumentParser(
-            epilog="""TODO list available commands
+            epilog="""Available commands are:
+* status  : display current job and running task(s)
+* switch  : switch between jobs
+* suspend : suspend all running tasks if any
+* job     : handle jobs (list, create, delete, ...)
+* task    : handle tasks (list, create, delete, start, stop, ...)
 See 'wok <command> --help' for more help on each command""",
             formatter_class=RawDescriptionHelpFormatter,
         )
         parser.add_argument(
             "command",
-            choices=["status", "switch", "suspend", "job", "task", "stat"],
+            choices=["status", "switch", "suspend", "job", "task"],
             nargs="?",
             default="status",
         )
@@ -65,6 +70,12 @@ See 'wok <command> --help' for more help on each command""",
             description=description,
             formatter_class=RawDescriptionHelpFormatter,
         )
+        parser.add_argument(
+            "-t",
+            "--table",
+            action="store_true",
+            help="Display jobs details in table format",
+        )
         group = parser.add_mutually_exclusive_group()
         group.add_argument(
             "-c", "--create", action="store_true", help="Create a job",
@@ -107,7 +118,7 @@ See 'wok <command> --help' for more help on each command""",
             print(out)
         else:
             for job in args.job:
-                _, out = self.api.get_job_details(job)
+                _, out = self.api.get_job_details(job, table=args.table)
                 print(out)
 
     def task(self):
@@ -122,6 +133,12 @@ See 'wok <command> --help' for more help on each command""",
             prog=sys.argv[0] + " task",
             description=description,
             formatter_class=RawDescriptionHelpFormatter,
+        )
+        parser.add_argument(
+            "-t",
+            "--table",
+            action="store_true",
+            help="Display tasks details in table format",
         )
         group = parser.add_mutually_exclusive_group()
         startstop = group.add_mutually_exclusive_group()
@@ -188,11 +205,8 @@ See 'wok <command> --help' for more help on each command""",
 
         else:
             for task in args.task:
-                _, out = self.api.get_task_details(task)
+                _, out = self.api.get_task_details(task, table=args.table)
                 print(out)
-
-    def stat(self):
-        print("TODO stat")
 
 
 if __name__ == "__main__":

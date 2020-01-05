@@ -1,6 +1,17 @@
 from datetime import datetime, timedelta
 from typing import List, Tuple
 
+from tabulate import tabulate
+
+
+def duration_to_str(duration: timedelta) -> str:
+    sduration = str(duration)
+    try:
+        sduration = sduration[: sduration.rindex(".")]  # remove milliseconds
+    except ValueError:
+        pass  # not found
+    return sduration
+
 
 class Task:
     """A Task has a name and datetimes when the user worked on it."""
@@ -51,14 +62,10 @@ class Task:
         duration = dt - self.current_datetime
         self.datetimes.append((self.current_datetime, dt))
         self.current_datetime = None
-        sduration = str(duration)
-        try:
-            sduration = sduration[: sduration.rindex(".")]  # remove milliseconds
-        except ValueError:
-            pass  # not found
+        sduration = duration_to_str(duration)
         return (
             True,
-            f"{self} ended at {dt.strftime(Task.niceformat)}\n\tDuration={duration}",
+            f"{self} ended at {dt.strftime(Task.niceformat)}\n\tDuration={sduration}",
         )
 
     def load(self, input: List[str]) -> None:
@@ -104,19 +111,14 @@ class Task:
     def __str__(self):
         return f"Task '{self.name}'"
 
-    def get_total_duration(self, now: datetime = datetime.now()) -> str:
+    def get_total_duration(self, now: datetime = datetime.now()) -> timedelta:
         duration = sum(
             [dt[1] - dt[0] for dt in self.datetimes],
             timedelta(0)
             if self.current_datetime is None
             else now - self.current_datetime,
         )
-        sduration = str(duration)
-        try:
-            sduration = sduration[: sduration.rindex(".")]  # remove milliseconds
-        except ValueError:
-            pass  # not found
-        return sduration
+        return duration
 
     def detailed_str(self):
         now = datetime.now()
@@ -127,8 +129,32 @@ class Task:
             out += "\n"
             out += self.datetimes[0][0].strftime(Task.niceformat)
             # TODO format duration
-            out += " -[" + str(self.get_total_duration(now)) + "]-> "
+            out += " -[" + duration_to_str(self.get_total_duration(now)) + "]-> "
             out += (
                 self.datetimes[-1][1] if self.current_datetime is None else now
             ).strftime(Task.niceformat)
         return out
+
+    def detailed_table(self):
+        now = datetime.now()
+        time_data = [
+            [fro_m.strftime(Task.niceformat), to.strftime(Task.niceformat)]
+            for (fro_m, to) in self.datetimes
+        ]
+        if self.current_datetime is not None:
+            time_data.append(
+                [
+                    self.current_datetime.strftime(Task.niceformat),
+                    now.strftime(Task.niceformat),
+                ]
+            )
+        time_table = tabulate(time_data, ["from", "to"], tablefmt="fancy_grid")
+        return tabulate(
+            [
+                ["running", "yes" if self.current_datetime is not None else "no"],
+                ["time", time_table],
+                ["duration", duration_to_str(self.get_total_duration(now))],
+            ],
+            ["Task", self.name],
+            tablefmt="fancy_grid",
+        )
