@@ -214,5 +214,9 @@ See 'wok <command> --help' for more help on each command""",
         print(out)
 
 
-if __name__ == "__main__":
+def main():
     WokCli()
+
+
+if __name__ == "__main__":
+    main()

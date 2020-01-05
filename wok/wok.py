@@ -84,7 +84,7 @@ class Wok:
         return True, "Loaded successfully"
 
     def detailed_table(self) -> str:
-        out = tabulate([["Wok details"]], tablefmt="fancy_grid")
+        out = tabulate([["***** Wok details *****"]], tablefmt="fancy_grid")
         out += "\n"
         if self.current_job_idx != -1:
             out += self.jobs[self.current_job_idx].detailed_table(
@@ -108,12 +108,7 @@ class Wok:
                     suffix=[
                         [
                             "detailed tasks",
-                            "\n".join(
-                                [
-                                    task.detailed_table()
-                                    for task in self.jobs[self.current_job_idx].tasks
-                                ]
-                            ),
+                            "\n".join([task.detailed_table() for task in job.tasks]),
                         ]
                     ],
                 )
