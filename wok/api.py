@@ -26,7 +26,13 @@ class WokApi:
             else self.wok.jobs[self.wok.current_job_idx]
         )
 
+    @staticmethod
+    def __validate_name(name: str) -> bool:
+        return any([char in name for char in r".-+/\:*?|<>"]) or "current_job" in name
+
     def add_job(self, name: str, current: bool = False) -> ApiRtype:
+        if not WokApi.__validate_name(name):
+            return False, "Job name cannot contain a '.'"
         if any([job.name == name for job in self.wok.jobs]):
             return False, f"Job with name '{name}' already exists"
         job = Job(name)
@@ -36,6 +42,8 @@ class WokApi:
         return True, f"Job '{name}' created"
 
     def add_task(self, name: str) -> ApiRtype:
+        if not WokApi.__validate_name(name):
+            return False, "Task name cannot contain a '.'"
         job = self.get_current_job()
         if job is None:
             return False, "No current job to add a task to"
@@ -92,7 +100,7 @@ class WokApi:
             )
         return True, f"Job '{name}' deleted!"
 
-    def deleted_task(self, name: str) -> ApiRtype:
+    def delete_task(self, name: str) -> ApiRtype:
         job = self.get_current_job()
         task = self.__get_task(name)
         if task is None:
@@ -148,31 +156,63 @@ class WokApi:
             return True, task.detailed_table()
         return True, task.detailed_str()
 
-    def start_task(self, name: str) -> ApiRtype:
-        job = self.get_current_job()
-        if job is None:
-            return False, "No current job"
-        task = self.__get_task(name)
+    def __handle_path(self, path: str) -> Tuple[bool, str, str, str]:
+        if "." in path:
+            job_name, task_name = path.split(".")
+            job = self.__get_job(job_name)
+            if job is None:
+                return (
+                    False,
+                    f"No job with name '{job_name}' found",
+                    job_name,
+                    task_name,
+                )
+            if job != self.get_current_job():
+                switched, msg = self.switch(job_name)
+                return switched, msg, job_name, task_name
+            return True, "", job_name, task_name
+        else:
+            job = self.get_current_job()
+            if job is None:
+                return False, "No current job", "", ""
+            return True, "", job.name, path
+
+    def start(self, path: str, create: bool = False) -> ApiRtype:
+        res, msg, job_name, task_name = self.__handle_path(path)
+        if not res:
+            return res, msg
+        out = "" if msg == "" else msg + "\n"
+        task = self.__get_task(task_name)
         if task is None:
-            added, msg = self.add_task(name)
+            if not create:
+                return (
+                    False,
+                    out
+                    + f"No task named '{task_name}' found in current job '{job_name}'",
+                )
+            added, msg = self.add_task(task_name)
             if not added:
                 return False, msg
-            task = self.__get_task(name)
-        return task.start()
+            out += msg + "\n"
+            task = self.__get_task(task_name)
+        started, msg = task.start()
+        return started, out + msg
 
-    def end_task(self, name: str) -> ApiRtype:
-        job = self.get_current_job()
-        if job is None:
-            return False, "No current job"
-        task = self.__get_task(name)
+    def end(self, path: str, create: bool = False) -> ApiRtype:
+        res, msg, job_name, task_name = self.__handle_path(path)
+        if not res:
+            return res, msg
+        out = "" if msg == "" else msg + "\n"
+        task = self.__get_task(task_name)
         if task is None:
-            return False, f"No task '{name}' found in current job '{job.name}'"
-        return task.end()
+            return (
+                False,
+                out + f"No task '{task_name}' found in current job '{job_name}'",
+            )
+        ended, msg = task.end()
+        return ended, out + msg
 
     def status(self) -> ApiRtype:
-        """Get the status
-
-        """
         j, t = "No current job", []
         job = self.get_current_job()
         if job is not None:
@@ -192,35 +232,32 @@ class WokApi:
         return True, out
 
     def suspend(self) -> ApiRtype:
-        """Suspend the all running tasks if any
-
-        :return: False if no task to suspend + message
-        :rtype: boolean, string
-
-        """
         r = []
         for job in self.wok.jobs:
             for task in job.get_running_tasks():
                 r.append(task.end())
         if len(r) == 0:
-            return False, "No task to suspended"
+            return False, "No task to suspend"
         return any([b for b, _ in r]), "\n".join([m for _, m in r])
 
     def switch(self, job_name: str, create: bool = False) -> ApiRtype:
-        """Switch to the job with the given name
-
-        :param job_name: The name of the job to switch to
-        :param create: Create the job if it does not exist (Default value = False)
-        :return: True if the job was found and selected + message
-        :rtype: boolean, string
-
-        """
-        ok = True, f"Switched to job '{job_name}'"
+        if (
+            self.get_current_job() is not None
+            and self.get_current_job().name == job_name
+        ):
+            return False, f"Already on job '{job_name}'"
+        # suspend all running tasks before switching
+        suspended, suspend_out = self.suspend()
+        if suspended:
+            suspend_out = suspend_out + "\n"
+        else:
+            suspend_out = ""
+        ok = True, suspend_out + f"Switched to job '{job_name}'"
         ko = (
             False,
-            f"Impossible to switch to job '{job_name}', try using the '-c' option",
+            suspend_out
+            + f"Impossible to switch to job '{job_name}', try using the '-c' option",
         )
-        self.suspend()  # suspend all running tasks before switching
         try:
             _, self.wok.current_job_idx = next(
                 ((j, i) for i, j in enumerate(self.wok.jobs) if j.name == job_name)

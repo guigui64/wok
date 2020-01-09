@@ -20,9 +20,9 @@ WoK - the Work Kounter
 Features
 --------
 
+* manage jobs and tasks
 * register working time of specific tasks
-* display statistics per day, week or month
-* etc. (*TBD*)
+* display statistics per week, month or year
 
 Usage
 -----
@@ -34,7 +34,9 @@ Usage
 +---------+-----------------------------------------------+
 | switch  | Switch to a job                               |
 +---------+-----------------------------------------------+
-| suspend | Suspend the running tasks if any              |
+| start   | Start tasks                                   |
++---------+-----------------------------------------------+
+| end     | Suspend tasks                                 |
 +---------+-----------------------------------------------+
 | job     | Handle jobs (list, add, delete)               |
 +---------+-----------------------------------------------+
@@ -42,6 +44,8 @@ Usage
 +---------+-----------------------------------------------+
 | details | Display details of all jobs and tasks         |
 +---------+-----------------------------------------------+
+
+See ``wok --help``.
 
 Model
 -----
@@ -57,10 +61,8 @@ Model
 +------+------------------------------------------------------+----------------------------------------------------------------------------+
 | Task | A task from a job (a task cannot be shared between   | | ``wok task`` or ``wok task --list`` to list all tasks of the current job |
 |      | jobs, create a *generic* job if you have such tasks) | | ``wok task --create my_task`` to add the *my_task* task                  |
-|      |                                                      | | ``wok task --start my_task`` to register you started working on this task|
-|      |                                                      | | ``wok suspend`` will suspend any running task                            |
-+------+------------------------------------------------------+----------------------------------------------------------------------------+
-|      |                                                      |                                                                            |
+|      |                                                      | | ``wok start my_task`` to register you started working on this task       |
+|      |                                                      | | ``wok end`` will suspend any running task                                |
 +------+------------------------------------------------------+----------------------------------------------------------------------------+
 
 Files

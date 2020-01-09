@@ -2,7 +2,7 @@ from datetime import timedelta
 from typing import List, Optional, Tuple
 
 from tabulate import tabulate
-from wok.task import Task, duration_to_str
+from wok.task import Task
 
 
 class Job:
@@ -94,8 +94,8 @@ class Job:
             [
                 t.name,
                 "yes" if t.is_running() else "no",
-                duration_to_str(d),
-                f"{d / total:.2%}",
+                Task.duration_to_str(d),
+                "N/A" if total == 0 else f"{d / total:.2%}",
             ]
             for (t, d) in tasks
         ]
@@ -103,7 +103,7 @@ class Job:
             tasks_data, ["name", "running", "duration", "ratio"], tablefmt="fancy_grid"
         )
         return tabulate(
-            [["tasks", tasks_table], ["total duration", duration_to_str(total)]]
+            [["tasks", tasks_table], ["total duration", Task.duration_to_str(total)]]
             + suffix,
             [title, self.name],
             tablefmt="fancy_grid",

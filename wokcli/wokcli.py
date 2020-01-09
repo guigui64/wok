@@ -18,16 +18,17 @@ class WokCli:
             epilog="""Available commands are:
 * status  : display current job and running task(s)
 * switch  : switch between jobs
-* suspend : suspend all running tasks if any
 * job     : handle jobs (list, create, delete, ...)
-* task    : handle tasks (list, create, delete, start, stop, ...)
+* task    : handle tasks (list, create, delete, ...)
+* end     : suspend a task or all running tasks if any
+* start   : start the given task (can be prefixed by job name 'job.task')
 * details : display detailed tables of all jobs and tasks
 See 'wok <command> --help' for more help on each command""",
             formatter_class=RawDescriptionHelpFormatter,
         )
         parser.add_argument(
             "command",
-            choices=["status", "switch", "suspend", "job", "task", "details"],
+            choices=["status", "switch", "job", "task", "end", "start", "details"],
             nargs="?",
             default="status",
         )
@@ -36,6 +37,11 @@ See 'wok <command> --help' for more help on each command""",
         getattr(self, args.command)()
 
     def status(self):
+        parser = ArgumentParser(
+            prog=sys.argv[0] + " status",
+            description="Display current job and running task(s)",
+        )
+        parser.parse_args()
         res, out = self.api.status()
         if res:
             print(out)
@@ -45,14 +51,58 @@ See 'wok <command> --help' for more help on each command""",
             prog=sys.argv[0] + " switch", description="Switch to a job"
         )
         parser.add_argument("job", help="the job to switch to")
-        parser.add_argument("-c", "--create", action="store_true")
+        parser.add_argument(
+            "-c",
+            "--create",
+            action="store_true",
+            help="Create the job if it does not exist",
+        )
         args = parser.parse_args(sys.argv[2:])
         self.save, out = self.api.switch(args.job, create=args.create)
         print(out)
 
-    def suspend(self):
-        self.save, out = self.api.suspend()
-        print(out)
+    def start(self):
+        parser = ArgumentParser(prog=sys.argv[0] + " start", description="Start a task")
+        parser.add_argument(
+            "path",
+            help="the task to start, can be prefixed by the job as 'job.task'",
+            nargs="*",
+        )
+        parser.add_argument(
+            "-c",
+            "--create",
+            action="store_true",
+            help="Create the task if it does not exist",
+        )
+        args = parser.parse_args(sys.argv[2:])
+        for path in args.path:
+            started, out = self.api.start(path, create=args.create)
+            if started:
+                # One task started might be False but save must stay True
+                self.save = True
+            print(out)
+
+    def end(self):
+        parser = ArgumentParser(
+            prog=sys.argv[0] + " end",
+            description="Suspend a task or all running tasks if any",
+        )
+        parser.add_argument(
+            "path",
+            help="the task to end, can be prefixed by the job as 'job.task'",
+            nargs="*",
+        )
+        args = parser.parse_args(sys.argv[2:])
+        if len(args.path) == 0:
+            self.save, out = self.api.suspend()
+            print(out)
+        else:
+            for path in args.path:
+                res, msg = self.api.end(path)
+                if res:
+                    # One task res might be False but save must stay True
+                    self.save = True
+                print(msg)
 
     def __check_args_nb(self, li, fun):
         if not fun(len(li)):
@@ -93,7 +143,7 @@ See 'wok <command> --help' for more help on each command""",
         group.add_argument(
             "-l", "--list", action="store_true", help="List all existing jobs"
         )
-        parser.add_argument("job", nargs="*")
+        parser.add_argument("job", nargs="*", help="The job(s) to handle")
         args = parser.parse_args(sys.argv[2:])
         if args.create:
             if not self.__check_args_nb(args.job, lambda x: x > 0):
@@ -142,34 +192,25 @@ See 'wok <command> --help' for more help on each command""",
             help="Display tasks details in table format",
         )
         group = parser.add_mutually_exclusive_group()
-        startstop = group.add_mutually_exclusive_group()
-        crud = group.add_mutually_exclusive_group()
-        crud.add_argument(
+        group.add_argument(
             "-c",
             "--create",
             action="store_true",
             help="Create a task in the current job",
         )
-        crud.add_argument(
+        group.add_argument(
             "-d", "--delete", action="store_true", help="Delete the specified task",
         )
-        crud.add_argument(
+        group.add_argument(
             "-r", "--rename", action="store_true", help="Rename the specified task"
         )
-        crud.add_argument(
+        group.add_argument(
             "-l",
             "--list",
             action="store_true",
             help="List all existing tasks in the current job",
         )
-        startstop.add_argument(
-            "-s",
-            "--start",
-            action="store_true",
-            help="Start the task and create the task if it does not exist",
-        )
-        startstop.add_argument("-e", "--end", action="store_true", help="Stop the task")
-        parser.add_argument("task", nargs="*")
+        parser.add_argument("task", nargs="*", help="The task(s) to handle")
         args = parser.parse_args(sys.argv[2:])
         if args.create:
             if not self.__check_args_nb(args.task, lambda x: x > 0):
@@ -190,16 +231,6 @@ See 'wok <command> --help' for more help on each command""",
                 return
             self.save, out = self.api.rename_task(*args.task[:2])
             print(out)
-        elif args.start:
-            if not self.__check_args_nb(args.task, lambda x: x == 1):
-                return
-            self.save, out = self.api.start_task(args.task[0])
-            print(out)
-        elif args.end:
-            if not self.__check_args_nb(args.task, lambda x: x == 1):
-                return
-            self.save, out = self.api.end_task(args.task[0])
-            print(out)
         elif len(args.task) == 0 or args.list:
             _, out = self.api.list_current_job_tasks()
             print(out)
@@ -210,6 +241,11 @@ See 'wok <command> --help' for more help on each command""",
                 print(out)
 
     def details(self):
+        parser = ArgumentParser(
+            prog=sys.argv[0] + " details",
+            description="Display detailed tables of all jobs and tasks",
+        )
+        parser.parse_args()
         _, out = self.api.get_details()
         print(out)
 

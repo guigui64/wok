@@ -4,15 +4,6 @@ from typing import List, Tuple
 from tabulate import tabulate
 
 
-def duration_to_str(duration: timedelta) -> str:
-    sduration = str(duration)
-    try:
-        sduration = sduration[: sduration.rindex(".")]  # remove milliseconds
-    except ValueError:
-        pass  # not found
-    return sduration
-
-
 class Task:
     """A Task has a name and datetimes when the user worked on it."""
 
@@ -23,6 +14,15 @@ class Task:
         self.name: str = name
         self.datetimes: List[Tuple[datetime, datetime]] = []
         self.current_datetime: datetime = None
+
+    @staticmethod
+    def duration_to_str(duration: timedelta) -> str:
+        sduration = str(duration)
+        try:
+            sduration = sduration[: sduration.rindex(".")]  # remove milliseconds
+        except ValueError:
+            pass  # not found
+        return sduration
 
     def start(self, dt: datetime = datetime.now()) -> Tuple[bool, str]:
         """
@@ -62,7 +62,7 @@ class Task:
         duration = dt - self.current_datetime
         self.datetimes.append((self.current_datetime, dt))
         self.current_datetime = None
-        sduration = duration_to_str(duration)
+        sduration = Task.duration_to_str(duration)
         return (
             True,
             f"{self} ended at {dt.strftime(Task.niceformat)}\n\tDuration={sduration}",
@@ -130,7 +130,7 @@ class Task:
                 out += " [running]"
             out += "\n"
             out += self.datetimes[0][0].strftime(Task.niceformat)
-            out += " -[" + duration_to_str(self.get_total_duration(now)) + "]-> "
+            out += " -[" + Task.duration_to_str(self.get_total_duration(now)) + "]-> "
             out += (
                 self.datetimes[-1][1] if self.current_datetime is None else now
             ).strftime(Task.niceformat)
@@ -154,7 +154,7 @@ class Task:
             [
                 ["running", "yes" if self.current_datetime is not None else "no"],
                 ["time", time_table],
-                ["duration", duration_to_str(self.get_total_duration(now))],
+                ["duration", Task.duration_to_str(self.get_total_duration(now))],
             ]
             + suffix,
             ["task", self.name],

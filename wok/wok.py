@@ -21,7 +21,8 @@ class Wok:
         self.jobs: List[Job] = []
         self.current_job_idx: int = -1
 
-    def __check_dir(self, dir: Path) -> bool:
+    @staticmethod
+    def check_dir(dir: Path) -> bool:
         if dir.exists() and not dir.is_dir():
             print(f"ERROR: {dir} exists and is not a dir!")
             return False
@@ -37,7 +38,7 @@ class Wok:
         :rtype: boolean, string
 
         """
-        if not self.__check_dir(dir):
+        if not Wok.check_dir(dir):
             return False, "Could not load (see previous error)"
         # Now dir exists and is a directory
         current_job_name = None
@@ -69,7 +70,7 @@ class Wok:
         """
         if dir.exists():
             shutil.rmtree(dir)
-        if not self.__check_dir(dir):
+        if not Wok.check_dir(dir):
             return False, "Could not load (see previous error)"
         for i, job in enumerate(self.jobs):
             if i == self.current_job_idx:
