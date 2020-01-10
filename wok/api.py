@@ -28,7 +28,9 @@ class WokApi:
 
     @staticmethod
     def __validate_name(name: str) -> bool:
-        return any([char in name for char in r".-+/\:*?|<>"]) or "current_job" in name
+        return not (
+            any([char in name for char in r".-+/\:*?|<>"]) or "current_job" in name
+        )
 
     def add_job(self, name: str, current: bool = False) -> ApiRtype:
         if not WokApi.__validate_name(name):

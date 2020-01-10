@@ -41,7 +41,7 @@ See 'wok <command> --help' for more help on each command""",
             prog=sys.argv[0] + " status",
             description="Display current job and running task(s)",
         )
-        parser.parse_args()
+        parser.parse_args(sys.argv[2:])
         res, out = self.api.status()
         if res:
             print(out)
@@ -245,7 +245,7 @@ See 'wok <command> --help' for more help on each command""",
             prog=sys.argv[0] + " details",
             description="Display detailed tables of all jobs and tasks",
         )
-        parser.parse_args()
+        parser.parse_args(sys.argv[2:])
         _, out = self.api.get_details()
         print(out)
 
