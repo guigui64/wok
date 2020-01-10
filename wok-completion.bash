@@ -1,9 +1,9 @@
 #!/bin/bash
 
 _wok_completions() {
-	if [ $COMP_CWORD == 1 ]; then
+	if [[ $COMP_CWORD == 1 ]]; then
 		COMPREPLY=($(compgen -W "status switch job task end start details" -- "${COMP_WORDS[1]}"))
-	elif [ $COMP_CWORD > 1 ]; then
+	elif [[ $COMP_CWORD > 1 ]]; then
 		WORD=${COMP_WORDS[$COMP_CWORD]}
 		if [[ $WORD == -* ]]; then
 			# options
@@ -22,7 +22,7 @@ _wok_completions() {
 			esac
 		else
 			# arguments
-			current_job=$(cat ~/.wok/current_job)
+			current_job=$(cat ~/.wok/current_job 2> /dev/null)
 			jobs=($(ls ~/.wok | grep -v current_job))
 			case ${COMP_WORDS[1]} in
 				# "status"|"details") # nothing
@@ -34,7 +34,7 @@ _wok_completions() {
 					COMPREPLY+=($(compgen -W "$(echo ${tasks[@]})" -- "$WORD"))
 					;;
 				"start"|"end")
-					paths=($(ls ~/.wok/${current_job}))
+					paths=($([ ${current_job} ] && ls ~/.wok/${current_job}))
 					for job in "${jobs[@]}"; do
 						for task in $(ls ~/.wok/$job); do
 							paths+=($job.$task)
