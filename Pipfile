@@ -10,6 +10,7 @@ flake8 = "*"
 pre-commit = "*"
 isort = "*"
 pyment = "*"
+pyinstaller = "*"
 
 [packages]
 tabulate = "*"
@@ -21,6 +22,8 @@ python_version = "3.6"
 readme = "restview ./README.rst"
 test = "python -m unittest -v"
 autotest = "./scripts/autotest.sh"
+clean = "rm -rf build/ dist/"
+build = "pyinstaller -n wok -F wokcli/wokcli.py"
 
 [pipenv]
 allow_prereleases = true

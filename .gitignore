@@ -12,3 +12,8 @@ tags
 
 # Test files
 .wok_test/
+
+# Pyinstaller folders and files
+build
+dist
+wok.spec
