@@ -1,5 +1,6 @@
-task command handle path
 task add with dates
 details yearly, monthly, weekly
 (un)install script
 display duration in hours:minutes:seconds (not days)
+zsh and fish completion scripts
+duration in status

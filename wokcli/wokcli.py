@@ -210,34 +210,38 @@ See 'wok <command> --help' for more help on each command""",
             action="store_true",
             help="List all existing tasks in the current job",
         )
-        parser.add_argument("task", nargs="*", help="The task(s) to handle")
+        parser.add_argument(
+            "path",
+            help="the task(s) to handle, can be prefixed by the job as 'job.task'",
+            nargs="*",
+        )
         args = parser.parse_args(sys.argv[2:])
         if args.create:
-            if not self.__check_args_nb(args.task, lambda x: x > 0):
+            if not self.__check_args_nb(args.path, lambda x: x > 0):
                 return
-            for task in args.task:
-                res, msg = self.api.add_task(task)
+            for path in args.path:
+                res, msg = self.api.add_task(path)
                 if res:
-                    # One task res might be False but save must stay True
+                    # One path res might be False but save must stay True
                     self.save = True
                 print(msg)
         elif args.delete:
-            if not self.__check_args_nb(args.task, lambda x: x == 1):
+            if not self.__check_args_nb(args.path, lambda x: x == 1):
                 return
-            self.save, out = self.api.delete_task(args.task[0])
+            self.save, out = self.api.delete_task(args.path[0])
             print(out)
         elif args.rename:
-            if not self.__check_args_nb(args.task, lambda x: x == 2):
+            if not self.__check_args_nb(args.path, lambda x: x == 2):
                 return
-            self.save, out = self.api.rename_task(*args.task[:2])
+            self.save, out = self.api.rename_task(*args.path[:2])
             print(out)
-        elif len(args.task) == 0 or args.list:
+        elif len(args.path) == 0 or args.list:
             _, out = self.api.list_current_job_tasks()
             print(out)
 
         else:
-            for task in args.task:
-                _, out = self.api.get_task_details(task, table=args.table)
+            for path in args.path:
+                _, out = self.api.get_task_details(path, table=args.table)
                 print(out)
 
     def details(self):

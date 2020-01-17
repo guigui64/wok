@@ -34,7 +34,7 @@ class WokApi:
 
     def add_job(self, name: str, current: bool = False) -> ApiRtype:
         if not WokApi.__validate_name(name):
-            return False, "Job name cannot contain a '.'"
+            return False, f"Job name {name} is invalid"
         if any([job.name == name for job in self.wok.jobs]):
             return False, f"Job with name '{name}' already exists"
         job = Job(name)
@@ -45,7 +45,7 @@ class WokApi:
 
     def add_task(self, name: str) -> ApiRtype:
         if not WokApi.__validate_name(name):
-            return False, "Task name cannot contain a '.'"
+            return False, f"Task name {name} is invalid"
         job = self.get_current_job()
         if job is None:
             return False, "No current job to add a task to"
@@ -102,15 +102,18 @@ class WokApi:
             )
         return True, f"Job '{name}' deleted!"
 
-    def delete_task(self, name: str) -> ApiRtype:
-        job = self.get_current_job()
-        task = self.__get_task(name)
+    def delete_task(self, path: str) -> ApiRtype:
+        res, msg, job_name, task_name = self.__handle_path(path, switch=False)
+        if not res:
+            return res, msg
+        job = self.__get_job(job_name)
+        task = self.__get_task(task_name)
         if task is None:
             if job is None:
                 return False, "No current job"
-            return False, f"No task '{name}' found in current job '{job.name}'"
+            return False, f"No task '{task_name}' found in job '{job_name}'"
         job.tasks.remove(task)
-        return True, f"Task '{name}' deleted from current job '{job.name}'"
+        return True, f"Task '{task_name}' deleted from job '{job_name}'"
 
     def rename_job(self, old_name: str, new_name: str) -> ApiRtype:
         job = self.__get_job(old_name)
@@ -125,6 +128,10 @@ class WokApi:
         return True, f"Job '{old_name}' renamed '{new_name}' successfully"
 
     def rename_task(self, old_name: str, new_name: str) -> ApiRtype:
+        if not self.__validate_name(old_name):
+            return False, f"Name {old_name} is invalid"
+        if not self.__validate_name(new_name):
+            return False, f"Name {new_name} is invalid"
         job = self.get_current_job()
         if job is None:
             return False, "No current job"
@@ -147,18 +154,23 @@ class WokApi:
             return True, job.detailed_table()
         return True, str(job)
 
-    def get_task_details(self, name: str, table: bool = False) -> ApiRtype:
-        job = self.get_current_job()
-        task = self.__get_task(name)
+    def get_task_details(self, path: str, table: bool = False) -> ApiRtype:
+        res, msg, job_name, task_name = self.__handle_path(path)
+        if not res:
+            return res, msg
+        job = self.__get_job(job_name)
+        task = self.__get_task(task_name)
         if task is None:
             if job is None:
                 return False, "No current job"
-            return False, f"No task '{name}' found in current job '{job.name}'"
+            return False, f"No task '{task_name}' found in current job '{job_name}'"
         if table:
             return True, task.detailed_table()
         return True, task.detailed_str()
 
-    def __handle_path(self, path: str) -> Tuple[bool, str, str, str]:
+    def __handle_path(
+        self, path: str, switch: bool = True
+    ) -> Tuple[bool, str, str, str]:
         if "." in path:
             job_name, task_name = path.split(".")
             job = self.__get_job(job_name)
@@ -169,7 +181,7 @@ class WokApi:
                     job_name,
                     task_name,
                 )
-            if job != self.get_current_job():
+            if job != self.get_current_job() and switch:
                 switched, msg = self.switch(job_name)
                 return switched, msg, job_name, task_name
             return True, "", job_name, task_name
