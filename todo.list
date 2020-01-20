@@ -2,6 +2,5 @@ task add with dates
 details yearly, monthly, weekly
 details: add '--[no-]time' options to enable/disable detailed times
 (un)install script
-display duration in hours:minutes:seconds (not days)
 zsh and fish completion scripts
 duration in status

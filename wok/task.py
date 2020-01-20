@@ -17,12 +17,12 @@ class Task:
 
     @staticmethod
     def duration_to_str(duration: timedelta) -> str:
-        sduration = str(duration)
-        try:
-            sduration = sduration[: sduration.rindex(".")]  # remove milliseconds
-        except ValueError:
-            pass  # not found
-        return sduration
+        sec = duration.total_seconds()
+        hours = sec // 3600
+        sec = sec - hours * 3600
+        minutes = sec // 60
+        sec = sec - minutes * 60
+        return f"{int(hours):02}:{int(minutes):02}:{int(sec):02}"
 
     def start(self, dt: datetime = datetime.now()) -> Tuple[bool, str]:
         """
