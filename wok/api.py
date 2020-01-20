@@ -236,7 +236,7 @@ class WokApi:
                 t.append("No running task")
             else:
                 for task in tasks:
-                    t.append(task.__str__())
+                    t.append(task.detailed_str().replace(" [running]", ""))
         else:
             t.append("No running task")
         out = "Current job:\n"

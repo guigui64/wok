@@ -126,14 +126,9 @@ class Task:
         now = datetime.now()
         out = str(self)
         if len(self.datetimes) > 0:
+            out += f" (duration={Task.duration_to_str(self.get_total_duration(now))})"
             if self.is_running():
                 out += " [running]"
-            out += "\n"
-            out += self.datetimes[0][0].strftime(Task.niceformat)
-            out += " -[" + Task.duration_to_str(self.get_total_duration(now)) + "]-> "
-            out += (
-                self.datetimes[-1][1] if self.current_datetime is None else now
-            ).strftime(Task.niceformat)
         return out
 
     def detailed_table(self, suffix: List[str] = []):
