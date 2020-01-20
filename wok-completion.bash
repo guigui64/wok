@@ -29,11 +29,7 @@ _wok_completions() {
 				"switch"|"job")
 					COMPREPLY+=($(compgen -W "$(echo ${jobs[@]})" -- "$WORD"))
 					;;
-				"task")
-					tasks=($(ls ~/.wok/${current_job}))
-					COMPREPLY+=($(compgen -W "$(echo ${tasks[@]})" -- "$WORD"))
-					;;
-				"start"|"end")
+				"task"|"start"|"end")
 					paths=($([ ${current_job} ] && ls ~/.wok/${current_job}))
 					for job in "${jobs[@]}"; do
 						for task in $(ls ~/.wok/$job); do
