@@ -154,7 +154,9 @@ class WokApi:
             return True, job.detailed_table()
         return True, str(job)
 
-    def get_task_details(self, path: str, table: bool = False) -> ApiRtype:
+    def get_task_details(
+        self, path: str, table: bool = False, time: bool = True
+    ) -> ApiRtype:
         res, msg, job_name, task_name = self.__handle_path(path)
         if not res:
             return res, msg
@@ -165,8 +167,10 @@ class WokApi:
                 return False, "No current job"
             return False, f"No task '{task_name}' found in current job '{job_name}'"
         if table:
-            return True, task.detailed_table()
-        return True, task.detailed_str()
+            return True, task.detailed_table(time=time)
+        if time:
+            return True, " ".join(task.detailed_str())
+        return True, task.detailed_str()[0]
 
     def __handle_path(
         self, path: str, switch: bool = True
@@ -236,11 +240,11 @@ class WokApi:
                 t.append("No running task")
             else:
                 for task in tasks:
-                    t.append(task.detailed_str().replace(" [running]", ""))
+                    t.append(task.detailed_str()[0])
         else:
             t.append("No running task")
         out = "Current job:\n"
-        out += "\t" + j + "\n\n"
+        out += "\t" + j + "\n"
         out += "Running task(s):\n"
         out += "\n".join(["\t" + tt for tt in t])
         return True, out

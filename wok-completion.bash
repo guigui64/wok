@@ -17,7 +17,7 @@ _wok_completions() {
 					COMPREPLY+=($(compgen -W "-t --table -c --create -d --delete -r --rename -l --list" -- "$WORD"))
 					;;
 				"task")
-					COMPREPLY+=($(compgen -W "-t --table -c --create -d --delete -r --rename -l --list" -- "$WORD"))
+					COMPREPLY+=($(compgen -W "-t --table -c --create -d --delete -r --rename -l --list -s --short" -- "$WORD"))
 					;;
 			esac
 		else

@@ -211,6 +211,9 @@ See 'wok <command> --help' for more help on each command""",
             help="List all existing tasks in the current job",
         )
         parser.add_argument(
+            "-s", "--short", action="store_true", help="Do not display previous times"
+        )
+        parser.add_argument(
             "path",
             help="the task(s) to handle, can be prefixed by the job as 'job.task'",
             nargs="*",
@@ -241,7 +244,9 @@ See 'wok <command> --help' for more help on each command""",
 
         else:
             for path in args.path:
-                _, out = self.api.get_task_details(path, table=args.table)
+                _, out = self.api.get_task_details(
+                    path, table=args.table, time=not args.short
+                )
                 print(out)
 
     def details(self):

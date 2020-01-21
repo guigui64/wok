@@ -95,7 +95,7 @@ class Wok:
                         "detailed tasks",
                         "\n".join(
                             [
-                                task.detailed_table()
+                                task.detailed_table(time=False)
                                 for task in self.jobs[self.current_job_idx].tasks
                             ]
                         ),
@@ -109,7 +109,9 @@ class Wok:
                     suffix=[
                         [
                             "detailed tasks",
-                            "\n".join([task.detailed_table() for task in job.tasks]),
+                            "\n".join(
+                                [task.detailed_table(time=False) for task in job.tasks]
+                            ),
                         ]
                     ],
                 )

@@ -122,36 +122,38 @@ class Task:
         )
         return duration
 
-    def detailed_str(self):
+    def get_current_duration(self, now: datetime = datetime.now()) -> timedelta:
+        if self.current_datetime is None:
+            return timedelta(0)
+        return now - self.current_datetime
+
+    def detailed_str(self) -> Tuple[str]:
         now = datetime.now()
-        out = str(self)
-        if len(self.datetimes) > 0:
-            out += f" (duration={Task.duration_to_str(self.get_total_duration(now))})"
-            if self.is_running():
-                out += " [running]"
+        out = (str(self),)
+        if self.is_running():
+            out += (
+                f"started at {self.current_datetime.strftime(Task.niceformat)} "
+                + f"running for {Task.duration_to_str(self.get_current_duration(now))}",
+            )
         return out
 
-    def detailed_table(self, suffix: List[str] = []):
+    def detailed_table(self, suffix: List[str] = [], time: bool = True) -> str:
         now = datetime.now()
         time_data = [
             [fro_m.strftime(Task.niceformat), to.strftime(Task.niceformat)]
             for (fro_m, to) in self.datetimes
         ]
-        if self.current_datetime is not None:
-            time_data.append(
-                [
-                    self.current_datetime.strftime(Task.niceformat),
-                    now.strftime(Task.niceformat),
-                ]
-            )
         time_table = tabulate(time_data, ["from", "to"], tablefmt="fancy_grid")
-        return tabulate(
-            [
-                ["running", "yes" if self.current_datetime is not None else "no"],
-                ["time", time_table],
-                ["duration", Task.duration_to_str(self.get_total_duration(now))],
+        table = [["running", "yes" if self.is_running() else "no"]]
+        if time:
+            table += [["time", time_table]]
+        if self.is_running():
+            table += [["started", self.current_datetime.strftime(Task.niceformat)]]
+            table += [
+                ["running time", Task.duration_to_str(self.get_current_duration(now))]
             ]
-            + suffix,
-            ["task", self.name],
-            tablefmt="fancy_grid",
-        )
+        table += [
+            ["total duration", Task.duration_to_str(self.get_total_duration(now))]
+        ]
+        table += suffix
+        return tabulate(table, ["task", self.name], tablefmt="fancy_grid",)
