@@ -16,7 +16,6 @@ pyinstaller = "*"
 tabulate = "*"
 
 [requires]
-python_version = "3.6"
 
 [scripts]
 readme = "restview ./README.rst"
