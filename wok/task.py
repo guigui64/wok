@@ -61,11 +61,13 @@ class Task:
             return False, f"{self} not yet started"
         duration = dt - self.current_datetime
         self.datetimes.append((self.current_datetime, dt))
+        last_started = self.current_datetime
         self.current_datetime = None
         sduration = Task.duration_to_str(duration)
         return (
             True,
-            f"{self} ended at {dt.strftime(Task.niceformat)}\n\tDuration={sduration}",
+            f"{self} ended at {dt.strftime(Task.niceformat)}"
+            + f"\n\tDuration={sduration} ({last_started.strftime(Task.niceformat)})",
         )
 
     def load(self, input: List[str]) -> None:
