@@ -210,6 +210,11 @@ See 'wok <command> --help' for more help on each command""",
             action="store_true",
             help="List all existing tasks in the current job",
         )
+        group.add_argument(
+            "--register",
+            help="""Register starting and/or ending dates for the given task.
+Examples: "2020-01-01T09:10:11.123456->12:34", "12:34:56", "->01:02", ...""",
+        )
         parser.add_argument(
             "-s", "--short", action="store_true", help="Do not display previous times"
         )
@@ -237,6 +242,15 @@ See 'wok <command> --help' for more help on each command""",
             if not self.__check_args_nb(args.path, lambda x: x == 2):
                 return
             self.save, out = self.api.rename_task(*args.path[:2])
+            print(out)
+        elif args.register is not None:
+            if not self.__check_args_nb(args.path, lambda x: x == 1):
+                return
+            if "->" not in args.register:
+                start, end = args.register, None
+            else:
+                start, end = args.register.split("->")
+            self.save, out = self.api.register_task(args.path[0], start, end)
             print(out)
         elif len(args.path) == 0 or args.list:
             _, out = self.api.list_current_job_tasks()

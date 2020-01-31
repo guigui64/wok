@@ -1,9 +1,9 @@
 #!/bin/bash
 
 _wok_completions() {
-	if [[ $COMP_CWORD == 1 ]]; then
+	if [[ $COMP_CWORD -eq 1 ]]; then
 		COMPREPLY=($(compgen -W "status switch job task end start details" -- "${COMP_WORDS[1]}"))
-	elif [[ $COMP_CWORD > 1 ]]; then
+	elif [[ $COMP_CWORD -gt 1 ]]; then
 		WORD=${COMP_WORDS[$COMP_CWORD]}
 		if [[ $WORD == -* ]]; then
 			# options
@@ -17,12 +17,12 @@ _wok_completions() {
 					COMPREPLY+=($(compgen -W "-t --table -c --create -d --delete -r --rename -l --list" -- "$WORD"))
 					;;
 				"task")
-					COMPREPLY+=($(compgen -W "-t --table -c --create -d --delete -r --rename -l --list -s --short" -- "$WORD"))
+					COMPREPLY+=($(compgen -W "-t --table -c --create -d --delete -r --rename -l --list -s --short --register" -- "$WORD"))
 					;;
 			esac
 		else
 			# arguments
-			current_job=$(cat ~/.wok/current_job 2> /dev/null)
+			current_job=$(cat "$HOME"/.wok/current_job 2> /dev/null)
 			jobs=($(ls ~/.wok | grep -v current_job))
 			case ${COMP_WORDS[1]} in
 				# "status"|"details") # nothing
@@ -30,10 +30,10 @@ _wok_completions() {
 					COMPREPLY+=($(compgen -W "$(echo ${jobs[@]})" -- "$WORD"))
 					;;
 				"task"|"start"|"end")
-					paths=($([ ${current_job} ] && ls ~/.wok/${current_job}))
+					paths=($([ "${current_job}" ] && ls "$HOME/.wok/${current_job}"))
 					for job in "${jobs[@]}"; do
-						for task in $(ls ~/.wok/$job); do
-							paths+=($job.$task)
+						for task in $HOME/.wok/$job/*; do
+							paths+=($job.$(basename "$task"))
 						done
 					done
 					COMPREPLY+=($(compgen -W "$(echo ${paths[@]})" -- "$WORD"))

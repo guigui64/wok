@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 from tabulate import tabulate
 
@@ -14,6 +14,61 @@ class Task:
         self.name: str = name
         self.datetimes: List[Tuple[datetime, datetime]] = []
         self.current_datetime: datetime = None
+
+    def register_dates(self, started: str, ended: str) -> Tuple[bool, str]:
+        if started:
+            if self.is_running():
+                return False, f"{self} is already started"
+            res, start = Task.__parse_datetime(started)
+            if not res:
+                return False, start
+            if not ended:
+                self.current_datetime = start
+                return (
+                    True,
+                    f"{self} registered as started at "
+                    + f"{self.current_datetime.strftime(Task.niceformat)}",
+                )
+            else:
+                res, end = Task.__parse_datetime(ended)
+                if not res:
+                    return False, end
+                self.datetimes.append((start, end))
+                return (
+                    True,
+                    f"{self} registered "
+                    + f"{start.strftime(Task.niceformat)} -> {end.strftime(Task.niceformat)}",
+                )
+        elif ended and self.is_running():
+            res, end = Task.__parse_datetime(ended)
+            if not res:
+                return False, end
+            return self.end(dt=end)
+        return False, ""
+
+    @staticmethod
+    def __parse_datetime(s: str) -> Tuple[bool, Union[datetime, str]]:
+        now = datetime.now()
+        try:
+            return datetime.strptime(s, "%Y-%m-%dT%H:%M:%S")
+        except ValueError:
+            try:
+                return (
+                    True,
+                    datetime.strptime(s, "%H:%M:%S").replace(
+                        year=now.year, month=now.month, day=now.day
+                    ),
+                )
+            except ValueError:
+                try:
+                    return (
+                        True,
+                        datetime.strptime(s, "%H:%M").replace(
+                            year=now.year, month=now.month, day=now.day
+                        ),
+                    )
+                except ValueError:
+                    return False, f"Unrecognized date {s}"
 
     @staticmethod
     def duration_to_str(duration: timedelta) -> str:
@@ -33,7 +88,7 @@ class Task:
 
         """
         if self.current_datetime:
-            return False, f"{self} already started"
+            return False, f"{self} is already started"
         self.current_datetime = dt
         return (
             True,

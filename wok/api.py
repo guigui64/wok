@@ -230,6 +230,20 @@ class WokApi:
         ended, msg = task.end()
         return ended, out + msg
 
+    def register_task(self, path: str, start: str = None, end: str = None) -> ApiRtype:
+        res, msg, job_name, task_name = self.__handle_path(path)
+        if not res:
+            return res, msg
+        out = "" if msg == "" else msg + "\n"
+        task = self.__get_task(task_name)
+        if task is None:
+            return (
+                False,
+                out + f"No task named '{task_name}' found in current job '{job_name}'",
+            )
+        reg, msg = task.register_dates(started=start, ended=end)
+        return reg, out + msg
+
     def status(self) -> ApiRtype:
         j, t = "No current job", []
         job = self.get_current_job()
