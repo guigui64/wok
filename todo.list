@@ -1,3 +1,4 @@
 details yearly, monthly, weekly
 (un)install script
 zsh and fish completion scripts
+check startdate < enddate
