@@ -50,7 +50,7 @@ class Task:
     def __parse_datetime(s: str) -> Tuple[bool, Union[datetime, str]]:
         now = datetime.now()
         try:
-            return datetime.strptime(s, "%Y-%m-%dT%H:%M:%S")
+            return True, datetime.strptime(s, "%Y-%m-%dT%H:%M:%S")
         except ValueError:
             try:
                 return (
